@@ -1,0 +1,279 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bus, ArrowRight, Plus, TrendingUp, Users, DollarSign, Clock, Phone, MoreVertical, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getDepartures, getTodayStats, type OperatorDeparture } from '@/data/operatorMock';
+import { getCity } from '@/data/cities';
+import { fmtBr, fmtTime } from '@/lib/format';
+
+// ─────────────────────────────────────────────────────────────────
+// Dashboard — the screen the dispatcher opens at 5am.
+//
+// Layout principles:
+// - Most important info top-left: today's departure count + fill rate
+// - Then a list of today's departures, sorted by departure time
+// - Tomorrow's departures collapsed below ("see what's coming")
+// - Add departure button is always reachable (top-right + sidebar)
+//
+// What this screen deliberately doesn't do:
+// - Charts (need real data first)
+// - Per-passenger drill-down (sales report does that)
+// - Driver communication (next iteration)
+// ─────────────────────────────────────────────────────────────────
+
+const GADAA_COLOR = '#9A3412';
+
+export function OperatorDashboard() {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<'today' | 'tomorrow' | 'later'>('today');
+  const departures = getDepartures();
+  const stats = getTodayStats();
+
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
+  const visible = useMemo(() => {
+    if (tab === 'today') return departures.filter(d => d.date === today);
+    if (tab === 'tomorrow') return departures.filter(d => d.date === tomorrow);
+    return departures.filter(d => d.date > tomorrow);
+  }, [departures, tab, today, tomorrow]);
+
+  return (
+    <div className="px-4 lg:px-6 py-4 lg:py-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h1 className="text-xl lg:text-2xl font-black">Today's operations</h1>
+          <p className="text-[11px] lg:text-xs text-ink-500 mt-0.5">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/operator/add-departure')}
+          className="rounded-xl px-3 py-2 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm"
+          style={{ background: GADAA_COLOR }}
+        >
+          <Plus size={14} /> Add departure
+        </button>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-5">
+        <StatCard
+          icon={<Bus size={14} />}
+          label="Departures today"
+          value={String(stats.departures)}
+          sub={`${departures.filter(d => d.date === today && d.status === 'scheduled').length} scheduled`}
+        />
+        <StatCard
+          icon={<Users size={14} />}
+          label="Seats sold"
+          value={`${stats.seatsSold} / ${stats.totalSeats}`}
+          sub={`${stats.fillRate}% fill rate`}
+        />
+        <StatCard
+          icon={<DollarSign size={14} />}
+          label="Revenue today"
+          value={fmtBr(stats.revenue)}
+          sub="Gross · before fees"
+          accent={stats.revenue > 50000}
+        />
+        <StatCard
+          icon={<TrendingUp size={14} />}
+          label="Best route"
+          value="AA → JM"
+          sub="92% fill rate"
+        />
+      </div>
+
+      {/* Day tabs */}
+      <div className="flex items-center gap-1 mb-3 border-b border-ink-100">
+        <DayTab label="Today" sub={today.slice(5)} count={departures.filter(d => d.date === today).length} active={tab === 'today'} onClick={() => setTab('today')} />
+        <DayTab label="Tomorrow" sub={tomorrow.slice(5)} count={departures.filter(d => d.date === tomorrow).length} active={tab === 'tomorrow'} onClick={() => setTab('tomorrow')} />
+        <DayTab label="Later" sub="upcoming" count={departures.filter(d => d.date > tomorrow).length} active={tab === 'later'} onClick={() => setTab('later')} />
+      </div>
+
+      {/* Departures table (desktop) / card list (mobile) */}
+      {visible.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-ink-100 p-8 text-center">
+          <div className="w-12 h-12 mx-auto rounded-full bg-tiket-warm-cream flex items-center justify-center text-ink-500 mb-2">
+            <Bus size={20} />
+          </div>
+          <div className="text-sm font-bold">No departures scheduled</div>
+          <div className="text-[11px] text-ink-500 mt-0.5">Tap "Add departure" to create one.</div>
+        </div>
+      ) : (
+        <>
+          {/* Desktop: table */}
+          <div className="hidden lg:block bg-white rounded-2xl border border-ink-100 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-tiket-warm-cream text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                  <th className="text-left px-4 py-2.5">Bus</th>
+                  <th className="text-left px-4 py-2.5">Route</th>
+                  <th className="text-left px-4 py-2.5">Departure</th>
+                  <th className="text-left px-4 py-2.5">Driver</th>
+                  <th className="text-left px-4 py-2.5">Seats</th>
+                  <th className="text-left px-4 py-2.5">Revenue</th>
+                  <th className="text-left px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map(d => <DepartureRow key={d.id} departure={d} />)}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="lg:hidden space-y-2">
+            {visible.map(d => <DepartureCard key={d.id} departure={d} />)}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, sub, accent }: {
+  icon: React.ReactNode; label: string; value: string; sub: string; accent?: boolean;
+}) {
+  return (
+    <div className="bg-white rounded-xl border border-ink-100 p-3">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-500 mb-1">
+        <span style={accent ? { color: GADAA_COLOR } : undefined}>{icon}</span>
+        {label}
+      </div>
+      <div className="text-base lg:text-lg font-black tabular" style={accent ? { color: GADAA_COLOR } : undefined}>{value}</div>
+      <div className="text-[10px] text-ink-500 mt-0.5">{sub}</div>
+    </div>
+  );
+}
+
+function DayTab({ label, sub, count, active, onClick }: {
+  label: string; sub: string; count: number; active: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-2 -mb-px border-b-2"
+      style={{ borderColor: active ? GADAA_COLOR : 'transparent', color: active ? GADAA_COLOR : '#0E1411' }}
+    >
+      <div className="text-[12px] font-bold flex items-center gap-1.5">
+        {label}
+        <span className="px-1.5 py-0.5 rounded text-[9px] tabular" style={{ background: active ? GADAA_COLOR : '#E5E7EB', color: active ? 'white' : '#6B7280' }}>
+          {count}
+        </span>
+      </div>
+      <div className="text-[9px] text-ink-500">{sub}</div>
+    </button>
+  );
+}
+
+function DepartureRow({ departure }: { departure: OperatorDeparture }) {
+  const fromCity = getCity(departure.from);
+  const toCity = getCity(departure.to);
+  const fillPct = Math.round((departure.seatsSold / departure.totalSeats) * 100);
+  const revenue = departure.seatsSold * departure.pricePerSeat;
+
+  return (
+    <tr className="border-t border-ink-100 hover:bg-tiket-warm-cream/40">
+      <td className="px-4 py-2.5">
+        <div className="text-[12px] font-bold tabular">{departure.busNumber}</div>
+        <div className="text-[10px] text-ink-500">{departure.totalSeats} seats</div>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="text-[12px] font-semibold flex items-center gap-1.5">
+          {fromCity?.id} <ArrowRight size={10} className="text-ink-500" /> {toCity?.id}
+        </div>
+        <div className="text-[10px] text-ink-500">{fromCity?.name} → {toCity?.name}</div>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="text-[12px] font-semibold tabular">{fmtTime(departure.depHHMM)}</div>
+        <div className="text-[10px] text-ink-500 flex items-center gap-1"><Clock size={9} />{Math.round(departure.durationHr)}h</div>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="text-[12px]">{departure.driverName}</div>
+        <div className="text-[10px] text-ink-500 flex items-center gap-1"><Phone size={9} />{departure.driverPhone}</div>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <div className="text-[12px] font-bold tabular">{departure.seatsSold} / {departure.totalSeats}</div>
+        </div>
+        <div className="mt-1 h-1.5 w-24 bg-ink-100 rounded-full overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${fillPct}%`, background: fillPct >= 90 ? '#10B981' : fillPct >= 50 ? GADAA_COLOR : '#F59E0B' }} />
+        </div>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="text-[12px] font-bold tabular">{fmtBr(revenue)}</div>
+        <div className="text-[10px] text-ink-500">@ {fmtBr(departure.pricePerSeat)}</div>
+      </td>
+      <td className="px-4 py-2.5">
+        <StatusBadge status={departure.status} />
+      </td>
+      <td className="px-4 py-2.5 text-right">
+        <button className="text-ink-500 hover:text-ink-900 p-1" aria-label="Actions">
+          <MoreVertical size={14} />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function DepartureCard({ departure }: { departure: OperatorDeparture }) {
+  const fromCity = getCity(departure.from);
+  const toCity = getCity(departure.to);
+  const fillPct = Math.round((departure.seatsSold / departure.totalSeats) * 100);
+  const revenue = departure.seatsSold * departure.pricePerSeat;
+
+  return (
+    <div className="bg-white rounded-xl border border-ink-100 p-3">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <div className="text-[11px] font-bold tabular">{departure.busNumber}</div>
+          <div className="text-[13px] font-bold mt-0.5 flex items-center gap-1">
+            {fromCity?.name} <ArrowRight size={11} className="text-ink-500" /> {toCity?.name}
+          </div>
+        </div>
+        <StatusBadge status={departure.status} />
+      </div>
+
+      <div className="flex items-center gap-3 text-[11px] text-ink-500 mb-2">
+        <span className="flex items-center gap-1"><Clock size={10} />{fmtTime(departure.depHHMM)}</span>
+        <span>·</span>
+        <span>{departure.driverName}</span>
+      </div>
+
+      <div className="flex items-center justify-between pt-2 border-t border-ink-100">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-ink-500">Seats</div>
+          <div className="text-[13px] font-bold tabular">{departure.seatsSold}/{departure.totalSeats}</div>
+        </div>
+        <div className="flex-1 mx-3">
+          <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${fillPct}%`, background: fillPct >= 90 ? '#10B981' : fillPct >= 50 ? GADAA_COLOR : '#F59E0B' }} />
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] uppercase tracking-wider text-ink-500">Revenue</div>
+          <div className="text-[13px] font-bold tabular">{fmtBr(revenue)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: OperatorDeparture['status'] }) {
+  const map = {
+    scheduled: { bg: '#E5E7EB', fg: '#374151', label: 'Scheduled', icon: <Clock size={9} /> },
+    boarding:  { bg: '#FEF3C7', fg: '#92400E', label: 'Boarding',  icon: <Users size={9} /> },
+    departed:  { bg: '#DBEAFE', fg: '#1E40AF', label: 'Departed',  icon: <ArrowRight size={9} /> },
+    arrived:   { bg: '#D1FAE5', fg: '#065F46', label: 'Arrived',   icon: <CheckCircle2 size={9} /> },
+    cancelled: { bg: '#FEE2E2', fg: '#991B1B', label: 'Cancelled', icon: <AlertCircle size={9} /> },
+  } as const;
+  const s = map[status];
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: s.bg, color: s.fg }}>
+      {s.icon} {s.label}
+    </span>
+  );
+}
