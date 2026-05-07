@@ -15,6 +15,11 @@ import { EventCheckout } from '@/pages/EventCheckout';
 import { Tickets } from '@/pages/Tickets';
 import { TicketDetail } from '@/pages/TicketDetail';
 import { Profile } from '@/pages/Profile';
+import { OperatorLayout } from '@/pages/operator/OperatorLayout';
+import { OperatorLogin } from '@/pages/operator/OperatorLogin';
+import { OperatorDashboard } from '@/pages/operator/OperatorDashboard';
+import { OperatorAddDeparture } from '@/pages/operator/OperatorAddDeparture';
+import { OperatorSalesReport } from '@/pages/operator/OperatorSalesReport';
 
 export default function App() {
   return (
@@ -48,6 +53,16 @@ export default function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+
+      {/* Operator console — separate layout, separate auth gate.
+          Demo prototype; real version would live at operator.tiket.app. */}
+      <Route path="/operator/login" element={<OperatorLogin />} />
+      <Route path="/operator" element={<OperatorLayout />}>
+        <Route index element={<Navigate to="/operator/dashboard" replace />} />
+        <Route path="dashboard" element={<OperatorDashboard />} />
+        <Route path="add-departure" element={<OperatorAddDeparture />} />
+        <Route path="sales" element={<OperatorSalesReport />} />
       </Route>
     </Routes>
   );
