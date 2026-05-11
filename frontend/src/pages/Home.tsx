@@ -1,7 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bus, Train, Ticket, ChevronRight, Shield, Clock, ArrowRight, History } from 'lucide-react';
 import { TeletStripe } from '@/components/TeletStripe';
+import { LanguagePicker } from '@/components/LanguagePicker';
 import { useAppStore } from '@/store/AppStore';
+import { useT } from '@/lib/i18n';
 import { fmtRelative } from '@/lib/format';
 import { getCity } from '@/data/cities';
 import { getStation } from '@/data/rail';
@@ -9,6 +11,7 @@ import { isInTelegram, haptic } from '@/lib/telegram';
 
 export function Home() {
   const { state } = useAppStore();
+  const { t } = useT();
   const navigate = useNavigate();
   const upcomingTickets = state.tickets.filter(t => t.status === 'locked' || t.status === 'active').slice(0, 3);
   const recentSearches = state.recentSearches.slice(0, 4);
@@ -38,35 +41,41 @@ export function Home() {
           <circle cx="290" cy="55" r="16" fill="#FCD34D" opacity="0.6" />
           <path d="M-10 145 Q 100 130, 180 138 T 380 132" stroke="#D4A33B" strokeWidth="1" fill="none" strokeDasharray="4 3" opacity="0.5" />
         </svg>
-        {inTelegram && (
-          <div className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-[9px] font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-            Telegram
-          </div>
-        )}
+        {/* Top-right corner: language picker + Telegram indicator */}
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          {inTelegram && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-[9px] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              Telegram
+            </div>
+          )}
+          <LanguagePicker variant="ghost" />
+        </div>
         <div className="absolute inset-x-4 bottom-4 text-white">
           <div className="text-[10px] tracking-[0.22em] uppercase font-semibold text-tiket-gold">Tikēt · ቲኬት</div>
           <div className="text-2xl font-black mt-1 leading-tight">
-            {state.user ? `Selam, ${state.user.name.split(' ')[0]}` : 'Where to next?'}
+            {state.user
+              ? t('hero_greeting_named', { name: state.user.name.split(' ')[0] })
+              : t('hero_greeting_visitor')}
           </div>
-          <div className="text-xs opacity-80 font-ethiopic">የት ሊጓዙ ነው?</div>
+          <div className="text-xs opacity-80">{t('hero_subtitle')}</div>
         </div>
       </div>
 
       {/* Mode picker */}
       <div className="px-4 -mt-6 relative z-10">
         <div className="text-[11px] font-bold uppercase tracking-wider mb-2 px-1 text-white">
-          Choose how you travel
+          {t('choose_how_you_travel')}
         </div>
         <div className="space-y-2.5">
-          <ModeCard to="/bus" kind="bus" title="Intercity Bus" amh="የከተሞች መካከል አውቶቡስ"
-            sub="Selam · Odaa · Gadaa · Sky · Ethio · Walia"
+          <ModeCard to="/bus" kind="bus" title={t('mode_bus')}
+            sub={t('mode_bus_sub')}
             stats="120+ daily departures · 47 routes" icon={<Bus size={28} />} />
-          <ModeCard to="/rail" kind="rail" title="Addis–Djibouti Railway" amh="የኢትዮ–ጅቡቲ ባቡር"
-            sub="Standard gauge · electric · Tue & Sat departures"
+          <ModeCard to="/rail" kind="rail" title={t('mode_rail')}
+            sub={t('mode_rail_sub')}
             stats="752km · ~12hr · Standard / Business / Sleeper" icon={<Train size={28} />} />
-          <ModeCard to="/events" kind="event" title="Events & Tickets" amh="ክስተቶች"
-            sub="Football · concerts · cinema · theatre"
+          <ModeCard to="/events" kind="event" title={t('mode_events')}
+            sub={t('mode_events_sub')}
             stats="Sheger Derby · Teddy Afro · Edna Cinema" icon={<Ticket size={28} />} />
         </div>
       </div>
@@ -76,7 +85,7 @@ export function Home() {
         <div className="px-4 mt-5">
           <div className="flex items-center gap-1.5 mb-2 px-1">
             <History size={11} className="text-ink-500" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Recent searches</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">{t('recent_searches')}</span>
           </div>
           <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
             {recentSearches.map((s, i) => {
@@ -111,9 +120,9 @@ export function Home() {
       {upcomingTickets.length > 0 && (
         <div className="px-4 mt-5">
           <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Upcoming · ከፊትህ</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">{t('upcoming_tickets')}</span>
             <Link to="/tickets" className="text-[11px] font-bold text-tiket-green flex items-center gap-1">
-              View all <ChevronRight size={11} />
+              {t('view_all')} <ChevronRight size={11} />
             </Link>
           </div>
           <div className="space-y-2">
@@ -162,11 +171,11 @@ export function Home() {
 
 interface ModeCardProps {
   to: string; kind: 'bus' | 'rail' | 'event';
-  title: string; amh: string; sub: string; stats: string;
+  title: string; sub: string; stats: string;
   icon: React.ReactNode;
 }
 
-function ModeCard({ to, kind, title, amh, sub, stats, icon }: ModeCardProps) {
+function ModeCard({ to, kind, title, sub, stats, icon }: ModeCardProps) {
   const gradient = kind === 'bus'
     ? 'linear-gradient(135deg, #1A6B3A 0%, #0F4D27 100%)'
     : kind === 'rail'
@@ -185,8 +194,7 @@ function ModeCard({ to, kind, title, amh, sub, stats, icon }: ModeCardProps) {
             <span className="text-sm font-black text-ink-900">{title}</span>
             <ChevronRight size={14} className="text-ink-500" />
           </div>
-          <div className="text-[10px] text-ink-500 font-ethiopic">{amh}</div>
-          <div className="text-[10px] mt-1.5 text-ink-900 truncate">{sub}</div>
+          <div className="text-[10px] mt-1 text-ink-900 truncate">{sub}</div>
           <div className="text-[9px] text-ink-500 mt-0.5">{stats}</div>
         </div>
       </div>
