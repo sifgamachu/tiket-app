@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Lock, CheckCircle2, Clock, Bus, Train, Ticket as TicketIcon, Calendar, MapPin, User as UserIcon, Phone, Share2, Heart } from 'lucide-react';
 import { useAppStore } from '@/store/AppStore';
-import { TeletStripe } from '@/components/TeletStripe';
 import { FakeQR } from '@/components/FakeQR';
 import { fmtBr, fmtDateLong, fmtTime, fmtTimeFromIso, fmtUSD } from '@/lib/format';
 import { getCity } from '@/data/cities';
@@ -84,7 +83,6 @@ export function TicketDetail() {
 
   return (
     <div className="bg-tiket-cream min-h-screen pb-6">
-      <TeletStripe />
 
       {/* Header */}
       <div className="relative" style={{ background: headerColor }}>

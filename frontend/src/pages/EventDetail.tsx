@@ -5,7 +5,6 @@ import type { EventItem } from '@/types';
 import { getEventApi } from '@/lib/api';
 import { fmtBr, fmtDateLong, fmtTimeFromIso } from '@/lib/format';
 import { Loading } from '@/components/ui/Loading';
-import { TeletStripe } from '@/components/TeletStripe';
 import { useTelegramBackButton } from '@/lib/telegram';
 
 const CAT_ICONS = { sports: Trophy, concert: Music, cinema: Film, theatre: Drama, community: Users } as const;
@@ -47,7 +46,6 @@ export function EventDetail() {
 
   return (
     <div className="bg-tiket-cream min-h-screen pb-32">
-      <TeletStripe />
 
       {/* Hero */}
       <div className="relative h-48" style={{ background: gradient }}>

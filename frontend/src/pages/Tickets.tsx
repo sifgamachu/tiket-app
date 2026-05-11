@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Bus, Train, Ticket as TicketIcon, ChevronRight, Clock, CheckCircle2, Heart } from 'lucide-react';
 import type { Ticket } from '@/types';
 import { useAppStore } from '@/store/AppStore';
-import { TeletStripe } from '@/components/TeletStripe';
+import { useT } from '@/lib/i18n';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { fmtBr, fmtDate, fmtRelative, fmtTime } from '@/lib/format';
 import { getCity } from '@/data/cities';
@@ -12,6 +12,7 @@ import { getBusOperator } from '@/data/operators';
 
 export function Tickets() {
   const { state } = useAppStore();
+  const { t } = useT();
   const tickets = state.tickets;
 
   const upcoming = tickets.filter(t => t.status === 'locked' || t.status === 'active');
@@ -19,16 +20,14 @@ export function Tickets() {
 
   return (
     <div className="bg-tiket-cream min-h-screen">
-      <TeletStripe />
       <div className="px-4 pt-4 pb-3">
-        <div className="text-2xl font-black text-ink-900">My Tickets</div>
-        <div className="text-xs text-ink-500 font-ethiopic">የእኔ ቲኬቶች</div>
+        <div className="text-2xl font-black text-ink-900">{t('my_tickets')}</div>
       </div>
 
       {tickets.length === 0 && (
         <EmptyState
           icon={<TicketIcon size={24} />}
-          title="No tickets yet"
+          title={t('tickets_empty')}
           message="Buses, trains, and events you book will appear here."
           action={
             <Link to="/" className="inline-flex items-center gap-1.5 rounded-xl bg-tiket-green text-white px-4 py-2 text-sm font-bold">
@@ -40,7 +39,7 @@ export function Tickets() {
 
       {upcoming.length > 0 && (
         <div className="px-4">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500 mb-2">Upcoming · ከፊትህ</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500 mb-2">{t('tickets_active')}</div>
           <div className="space-y-2">
             {upcoming.map(t => <TicketRow key={t.id} ticket={t} />)}
           </div>
@@ -49,7 +48,7 @@ export function Tickets() {
 
       {past.length > 0 && (
         <div className="px-4 mt-5 mb-6">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500 mb-2">Past · ያለፉ</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500 mb-2">{t('tickets_past')}</div>
           <div className="space-y-2 opacity-70">
             {past.map(t => <TicketRow key={t.id} ticket={t} />)}
           </div>

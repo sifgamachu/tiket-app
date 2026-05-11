@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { User as UserIcon, Phone, Globe, Smartphone, LogOut, ChevronRight, Languages, CreditCard, Send } from 'lucide-react';
 import { useAppStore } from '@/store/AppStore';
-import { TeletStripe } from '@/components/TeletStripe';
 import { lsClearAll } from '@/lib/storage';
 import type { PaymentMethod } from '@/types';
 import { useToast } from '@/components/Toast';
@@ -38,7 +37,6 @@ export function Profile() {
 
   return (
     <div className="bg-tiket-cream min-h-screen pb-6">
-      <TeletStripe />
       <div className="px-4 pt-4 pb-3">
         <div className="text-2xl font-black text-ink-900">Account</div>
         <div className="text-xs text-ink-500 font-ethiopic">አካውንት</div>

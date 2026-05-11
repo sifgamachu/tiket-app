@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronDown, MapPin, Search, Users, CircleDot, Globe, Train as TrainIcon } from 'lucide-react';
 import { RAIL_STATIONS, RAIL_OPERATOR, getStation } from '@/data/rail';
-import { TeletStripe } from '@/components/TeletStripe';
 import { Sheet } from '@/components/ui/Sheet';
 import { useAppStore } from '@/store/AppStore';
 import { useTelegramBackButton } from '@/lib/telegram';
@@ -49,7 +48,6 @@ export function RailSearch() {
 
   return (
     <div className="bg-tiket-cream min-h-screen pb-6">
-      <TeletStripe />
 
       {/* Hero — train silhouette */}
       <div className="relative overflow-hidden h-40" style={{

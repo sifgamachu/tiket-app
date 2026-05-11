@@ -8,7 +8,6 @@ import { fmtBr, fmtBrToUSD, fmtTime, fmtUSD, ETB_PER_USD } from '@/lib/format';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Loading } from '@/components/ui/Loading';
 import { useAppStore } from '@/store/AppStore';
-import { TeletStripe } from '@/components/TeletStripe';
 import { DiasporaToggle, RecipientFields, useDiaspora } from '@/components/DiasporaToggle';
 import { useToast } from '@/components/Toast';
 import { useTelegramMainButton, useTelegramBackButton, haptic, isInTelegram } from '@/lib/telegram';
@@ -184,7 +183,6 @@ export function BusCheckout() {
 
       {!isInTelegram() && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-ink-100 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
-          <TeletStripe height={2} className="-mx-4 mb-2" />
           <button
             onClick={onPay}
             disabled={!canPay || paying}

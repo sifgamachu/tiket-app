@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronDown, MapPin, Search, Users, ArrowDownUp } from 'lucide-react';
 import { CITIES, getCity } from '@/data/cities';
-import { TeletStripe } from '@/components/TeletStripe';
 import { Sheet } from '@/components/ui/Sheet';
 import { useAppStore } from '@/store/AppStore';
 import { useTelegramBackButton } from '@/lib/telegram';
@@ -46,7 +45,6 @@ export function BusSearch() {
 
   return (
     <div className="bg-tiket-cream min-h-screen pb-6">
-      <TeletStripe />
 
       {/* Hero */}
       <div className="relative overflow-hidden h-40" style={{

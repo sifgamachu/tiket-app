@@ -5,7 +5,6 @@ import type { EventItem } from '@/types';
 import { listEvents } from '@/lib/api';
 import { EVENT_CATEGORIES } from '@/data/events';
 import { fmtDateLong, fmtBr } from '@/lib/format';
-import { TeletStripe } from '@/components/TeletStripe';
 import { EventCardSkeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTelegramBackButton } from '@/lib/telegram';
@@ -37,7 +36,6 @@ export function Events() {
 
   return (
     <div className="bg-tiket-cream min-h-screen">
-      <TeletStripe />
 
       <div className="relative overflow-hidden h-32" style={{
         background: 'linear-gradient(135deg, #9F1239 0%, #581C87 100%)',

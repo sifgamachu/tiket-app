@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Building2 } from 'lucide-react';
-import { TeletStripe } from '@/components/TeletStripe';
 
 // ─────────────────────────────────────────────────────────────────
 // Operator login. Visual only — no real auth. Submit drops a flag
@@ -34,7 +33,6 @@ export function OperatorLogin() {
 
   return (
     <div className="min-h-screen bg-tiket-cream flex flex-col">
-      <TeletStripe height={3} />
 
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">

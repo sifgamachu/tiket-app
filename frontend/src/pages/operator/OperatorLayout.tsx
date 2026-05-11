@@ -1,6 +1,5 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Plus, FileText, LogOut, Bell, ChevronDown } from 'lucide-react';
-import { TeletStripe } from '@/components/TeletStripe';
 
 // ─────────────────────────────────────────────────────────────────
 // Operator dashboard layout. Desktop-first (sidebar navigation,
@@ -33,7 +32,6 @@ export function OperatorLayout() {
 
   return (
     <div className="min-h-screen bg-tiket-cream text-ink-900">
-      <TeletStripe height={3} />
 
       {/* Top bar */}
       <header className="bg-white border-b border-ink-100 sticky top-0 z-20">
