@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bus, Train, Ticket, ChevronRight, Shield, Clock, ArrowRight, History } from 'lucide-react';
-import { LanguagePicker } from '@/components/LanguagePicker';
 import { useAppStore } from '@/store/AppStore';
 import { useT } from '@/lib/i18n';
 import { fmtRelative } from '@/lib/format';
@@ -135,16 +134,15 @@ export function Home() {
           </g>
         </svg>
 
-        {/* Top-right: language picker + Telegram indicator */}
-        <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-          {inTelegram && (
-            <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-[9px] font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-              Telegram
-            </div>
-          )}
-          <LanguagePicker variant="ghost" />
-        </div>
+        {/* Top-right: Telegram indicator (language picker is rendered
+            globally by the Layout so its dropdown is never clipped by
+            the hero's overflow:hidden). */}
+        {inTelegram && (
+          <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-[9px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+            Telegram
+          </div>
+        )}
 
         {/* Headline content. Gaps and line-height bump up when the
             active language is Ethiopic so አማርኛ / ትግርኛ have room

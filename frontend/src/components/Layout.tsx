@@ -1,24 +1,20 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { Home, Ticket, User } from 'lucide-react';
 import { LanguagePicker } from './LanguagePicker';
 import { isInTelegram } from '@/lib/telegram';
+import { useLocation } from 'react-router-dom';
 
 // ─────────────────────────────────────────────────────────────────
 // App shell for buyer pages. Renders:
 //   - the active route via <Outlet />
 //   - a fixed bottom nav (Home / Tickets / Account) on most pages,
-//     hidden on full-screen flow steps (seats, checkout, ticket
-//     detail) and when running inside Telegram (where the host
-//     chrome already provides navigation)
+//     hidden on full-screen flow steps and inside Telegram
 //   - a floating language picker top-right that's accessible from
-//     every sub-page, so a user landing on /bus or /tickets via a
-//     deep link can still switch language. Home suppresses this
-//     because its dawn hero integrates the picker visually.
+//     every page. Lives outside any overflow:hidden container so
+//     its dropdown is never clipped by a hero or modal.
 //
-// The previous teleta (green/yellow/red) stripe was removed in
-// favor of a quieter, more cohesive treatment that lets the brand
-// colors live on individual page surfaces rather than as a
-// chrome-level band.
+// The teleta (green/yellow/red) stripe was removed; the picker and
+// hero illustrations carry the brand identity instead.
 // ─────────────────────────────────────────────────────────────────
 
 export function Layout() {
@@ -26,15 +22,16 @@ export function Layout() {
 
   const onFlowStep = /^\/(bus\/seats|bus\/checkout|rail\/seats|rail\/checkout|events\/[^/]+\/checkout|tickets\/[^/]+)/.test(location.pathname);
   const hideBottomNav = onFlowStep || isInTelegram();
-  const isHome = location.pathname === '/';
 
   return (
     <div className="min-h-screen flex flex-col bg-tiket-cream">
-      {!isHome && (
-        <div className="fixed top-3 right-3 z-40">
-          <LanguagePicker variant="solid" />
-        </div>
-      )}
+      {/* Floating language picker — appears on every page, never
+          clipped because it lives at the layout root rather than
+          inside a page-level container. */}
+      <div className="fixed top-3 right-3 z-50">
+        <LanguagePicker variant="solid" />
+      </div>
+
       <main className={`flex-1 ${hideBottomNav ? '' : 'pb-16'}`}>
         <Outlet />
       </main>
