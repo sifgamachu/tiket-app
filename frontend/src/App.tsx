@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { I18nProvider } from '@/lib/i18n';
 import { Layout } from '@/components/Layout';
 import { Home } from '@/pages/Home';
 import { BusSearch } from '@/pages/BusSearch';
@@ -23,7 +24,8 @@ import { OperatorSalesReport } from '@/pages/operator/OperatorSalesReport';
 
 export default function App() {
   return (
-    <Routes>
+    <I18nProvider>
+      <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
 
@@ -65,5 +67,6 @@ export default function App() {
         <Route path="sales" element={<OperatorSalesReport />} />
       </Route>
     </Routes>
+    </I18nProvider>
   );
 }
