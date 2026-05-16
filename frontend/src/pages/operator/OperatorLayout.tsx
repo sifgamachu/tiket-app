@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Plus, FileText, LogOut, Bell, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Plus, FileText, LogOut, Bell, ChevronDown, MapPin, QrCode, ArrowDownToLine } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────
 // Operator dashboard layout. Desktop-first (sidebar navigation,
@@ -68,7 +68,10 @@ export function OperatorLayout() {
         <nav className="lg:hidden px-2 pb-2 flex gap-1 overflow-x-auto no-scrollbar">
           <MobileNavLink to="/operator/dashboard" label="Dashboard" icon={<LayoutDashboard size={13} />} />
           <MobileNavLink to="/operator/add-departure" label="Add" icon={<Plus size={13} />} />
+          <MobileNavLink to="/operator/scanner" label="Scan" icon={<QrCode size={13} />} />
           <MobileNavLink to="/operator/sales" label="Sales" icon={<FileText size={13} />} />
+          <MobileNavLink to="/operator/routes" label="Routes" icon={<MapPin size={13} />} />
+          <MobileNavLink to="/operator/payouts" label="Payouts" icon={<ArrowDownToLine size={13} />} />
         </nav>
       </header>
 
@@ -78,7 +81,12 @@ export function OperatorLayout() {
           <div className="text-[9px] font-bold uppercase tracking-wider text-ink-500 px-2 mb-2">Operations</div>
           <SidebarLink to="/operator/dashboard" label="Dashboard" amh="Today's departures" icon={<LayoutDashboard size={14} />} />
           <SidebarLink to="/operator/add-departure" label="Add departure" amh="Idileessuu" icon={<Plus size={14} />} />
+          <SidebarLink to="/operator/scanner" label="Scanner" amh="Sakatta'a" icon={<QrCode size={14} />} />
           <SidebarLink to="/operator/sales" label="Sales report" amh="Gabaasa gurgurtaa" icon={<FileText size={14} />} />
+
+          <div className="text-[9px] font-bold uppercase tracking-wider text-ink-500 px-2 mt-4 mb-2">Setup</div>
+          <SidebarLink to="/operator/routes" label="Routes & Fares" amh="Karaa fi Gatii" icon={<MapPin size={14} />} />
+          <SidebarLink to="/operator/payouts" label="Payouts" amh="Kafaltii" icon={<ArrowDownToLine size={14} />} />
 
           <div className="mt-auto pt-4 border-t border-ink-100">
             <div className="rounded-lg p-2.5 mb-3" style={{ background: GADAA_ACCENT }}>

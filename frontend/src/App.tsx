@@ -21,6 +21,9 @@ import { OperatorLogin } from '@/pages/operator/OperatorLogin';
 import { OperatorDashboard } from '@/pages/operator/OperatorDashboard';
 import { OperatorAddDeparture } from '@/pages/operator/OperatorAddDeparture';
 import { OperatorSalesReport } from '@/pages/operator/OperatorSalesReport';
+import { OperatorRoutes } from '@/pages/operator/OperatorRoutes';
+import { OperatorScanner } from '@/pages/operator/OperatorScanner';
+import { OperatorPayouts } from '@/pages/operator/OperatorPayouts';
 
 export default function App() {
   return (
@@ -64,7 +67,10 @@ export default function App() {
         <Route index element={<Navigate to="/operator/dashboard" replace />} />
         <Route path="dashboard" element={<OperatorDashboard />} />
         <Route path="add-departure" element={<OperatorAddDeparture />} />
+        <Route path="scanner" element={<OperatorScanner />} />
         <Route path="sales" element={<OperatorSalesReport />} />
+        <Route path="routes" element={<OperatorRoutes />} />
+        <Route path="payouts" element={<OperatorPayouts />} />
       </Route>
     </Routes>
     </I18nProvider>
