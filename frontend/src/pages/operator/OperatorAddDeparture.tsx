@@ -29,6 +29,36 @@ const GADAA_COLOR = '#9A3412';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+// Routes where federal/regional transport authorities set or cap
+// the fare. Real-world: most major intercity trunk routes are at
+// least partially regulated. Operators have discretion on premium
+// service tiers but the base coach fare has a ceiling.
+const REGULATED_ROUTES = new Set([
+  'AA-AD', 'AA-JM', 'AA-BD', 'AA-MK', 'AA-GD', 'AA-DD', 'AA-HW',
+  'AA-NK', 'AA-BS', 'AA-DB', 'AA-DS',
+]);
+
+// Existing departures on this driver/bus would conflict if their
+// windows overlap. Hard-coded demo data so the conflict can be shown
+// reliably during the demo; the real version would query the
+// departures table.
+const FAKE_CONFLICTS: Array<{ driver: string; bus: string; depHHMM: number; durHr: number; route: string }> = [
+  { driver: 'tolosa bekele', bus: 'GAD-114', depHHMM: 6.0, durHr: 5.8, route: 'AA→JM' },
+  { driver: 'diriba worku',  bus: 'GAD-121', depHHMM: 5.5, durHr: 5.5, route: 'AA→NK' },
+  { driver: 'lemma megersa', bus: 'GAD-128', depHHMM: 7.0, durHr: 8.0, route: 'AA→BE' },
+];
+
+function detectDriverConflict(name: string, dep: number, dur: number) {
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return null;
+  const existing = FAKE_CONFLICTS.find(c => c.driver === normalized);
+  if (!existing) return null;
+  const newEnd = dep + dur;
+  const existingEnd = existing.depHHMM + existing.durHr;
+  const overlap = !(newEnd <= existing.depHHMM || dep >= existingEnd);
+  return overlap ? existing : null;
+}
+
 export function OperatorAddDeparture() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +92,15 @@ export function OperatorAddDeparture() {
     const am = totalMin % 60;
     return `${String(ah).padStart(2, '0')}:${String(am).padStart(2, '0')}`;
   })();
+
+  // Operator-awareness checks: regulated routes and driver conflicts.
+  // These warn but don't block submit — the dispatcher decides.
+  const isRegulatedRoute = from !== to && (REGULATED_ROUTES.has(`${from}-${to}`) || REGULATED_ROUTES.has(`${to}-${from}`));
+  const depHHMMNum = (() => {
+    const [h, m] = depTime.split(':').map(Number);
+    return h + m / 60;
+  })();
+  const conflict = detectDriverConflict(driverName, depHHMMNum, durationHr);
 
   const canSubmit = from !== to && busNumber.length >= 5 && driverName.length > 1 && driverPhone.length >= 8;
 
@@ -134,6 +173,14 @@ export function OperatorAddDeparture() {
               </span>
             </div>
           )}
+          {isRegulatedRoute && (
+            <div className="mt-2 px-3 py-2 rounded-lg flex items-start gap-2 text-[11px] bg-purple-50 border border-purple-200">
+              <Info size={12} className="text-purple-700 flex-shrink-0 mt-0.5" />
+              <span className="text-purple-900 leading-snug">
+                <span className="font-bold">Regulated route.</span> Federal Transport Authority sets the fare ceiling on this corridor. Your standing fare will be checked against the cap when published.
+              </span>
+            </div>
+          )}
           {from === to && (
             <div className="mt-2 px-3 py-2 rounded-lg text-[11px] bg-amber-50 border border-amber-200 text-amber-900">
               Pick two different cities.
@@ -165,6 +212,14 @@ export function OperatorAddDeparture() {
           <div className="mt-3">
             <TextField icon={<Phone size={14} />} label="Driver phone" value={driverPhone} onChange={setDriverPhone} placeholder="+251 911 234 567" />
           </div>
+          {conflict && (
+            <div className="mt-3 px-3 py-2.5 rounded-lg flex items-start gap-2 text-[11px] bg-red-50 border border-red-200">
+              <Info size={12} className="text-red-700 flex-shrink-0 mt-0.5" />
+              <span className="text-red-900 leading-snug">
+                <span className="font-bold">Scheduling conflict.</span> {driverName} is already assigned to {conflict.bus} ({conflict.route} at {String(Math.floor(conflict.depHHMM)).padStart(2,'0')}:{String(Math.round((conflict.depHHMM % 1) * 60)).padStart(2,'0')}, runs ~{conflict.durHr.toFixed(1)}h). Pick a different driver or move this departure.
+              </span>
+            </div>
+          )}
         </Section>
 
         {/* Pricing — intentionally not edited here. See the comment

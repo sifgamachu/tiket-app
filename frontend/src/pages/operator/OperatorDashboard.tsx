@@ -56,6 +56,38 @@ export function OperatorDashboard() {
         </button>
       </div>
 
+      {/* Operations alerts — surfaces the things a dispatcher would
+          actually want to know without having to dig. Each alert maps
+          to a real-world Ethiopian intercity bus operations concern:
+          - Driver scheduling conflicts (double-booking the same driver
+            across two overlapping runs)
+          - Routes running unusually empty (so the dispatcher can pull
+            a coach or merge passengers)
+          - Regulated routes hitting their authority-set fare ceiling
+          - Buses overdue for routine service. */}
+      <div className="space-y-2 mb-5">
+        <AlertRow
+          tone="warn"
+          icon={<AlertCircle size={13} />}
+          title="Driver conflict"
+          message="Tolosa Bekele assigned to GAD-114 (06:00 AA→JM) and GAD-128 (07:30 AA→NK). One needs reassignment."
+          action="Reassign"
+        />
+        <AlertRow
+          tone="info"
+          icon={<Users size={13} />}
+          title="AA → Bedele is running 23% fill"
+          message="Below your usual 60% threshold. Consider folding into the 09:00 AA→Mettu run."
+          action="Review"
+        />
+        <AlertRow
+          tone="muted"
+          icon={<Bus size={13} />}
+          title="GAD-121 due for 30,000 km service"
+          message="Last serviced 28,400 km ago. Schedule before assigning to long-haul."
+        />
+      </div>
+
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-5">
         <StatCard
@@ -72,16 +104,16 @@ export function OperatorDashboard() {
         />
         <StatCard
           icon={<DollarSign size={14} />}
-          label="Revenue today"
-          value={fmtBr(stats.revenue)}
-          sub="Gross · before fees"
+          label="Net payout · T+5"
+          value={fmtBr(Math.round(stats.revenue * 0.925))}
+          sub={`After 7.5% Tikēt fee · ${fmtBr(stats.revenue)} gross`}
           accent={stats.revenue > 50000}
         />
         <StatCard
           icon={<TrendingUp size={14} />}
           label="Best route"
           value="AA → JM"
-          sub="92% fill rate"
+          sub="92% fill · regulated fare"
         />
       </div>
 
@@ -277,3 +309,37 @@ function StatusBadge({ status }: { status: OperatorDeparture['status'] }) {
     </span>
   );
 }
+
+interface AlertRowProps {
+  tone: 'warn' | 'info' | 'muted';
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  action?: string;
+}
+
+function AlertRow({ tone, icon, title, message, action }: AlertRowProps) {
+  const tones = {
+    warn:  { bg: '#FEF2F2', border: '#FECACA', iconBg: '#FEE2E2', iconFg: '#991B1B', titleFg: '#7F1D1D' },
+    info:  { bg: '#FEFCE8', border: '#FEF08A', iconBg: '#FEF9C3', iconFg: '#854D0E', titleFg: '#713F12' },
+    muted: { bg: '#F9FAFB', border: '#E5E7EB', iconBg: '#F3F4F6', iconFg: '#374151', titleFg: '#1F2937' },
+  } as const;
+  const t = tones[tone];
+  return (
+    <div className="rounded-xl px-3 py-2.5 flex items-start gap-2.5 border" style={{ background: t.bg, borderColor: t.border }}>
+      <div className="rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0" style={{ background: t.iconBg, color: t.iconFg }}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[11px] font-bold leading-tight" style={{ color: t.titleFg }}>{title}</div>
+        <div className="text-[10px] text-ink-500 mt-0.5 leading-snug">{message}</div>
+      </div>
+      {action && (
+        <button className="text-[10px] font-bold rounded-md px-2 py-1 flex-shrink-0 bg-white border border-ink-100 hover:bg-tiket-warm-cream">
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
+
