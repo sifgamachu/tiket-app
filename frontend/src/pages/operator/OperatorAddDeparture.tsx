@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Clock, DollarSign, User, Phone, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, User, Phone, ArrowRight, CheckCircle2, Info } from 'lucide-react';
 import { CITIES, getCity } from '@/data/cities';
 import { addDeparture } from '@/data/operatorMock';
-import { fmtBr } from '@/lib/format';
+import { computeBusFare } from '@/data/routes';
 
 // ─────────────────────────────────────────────────────────────────
 // Add Departure form. Single screen, no multi-step wizard.
@@ -13,7 +13,13 @@ import { fmtBr } from '@/lib/format';
 // 1. Route (from / to)
 // 2. Date + departure time
 // 3. Bus number + driver
-// 4. Price per seat
+//
+// Pricing intentionally lives outside this form — fares are set at
+// the route level by the operator (often with regulatory input from
+// transport authorities), not per-departure. The system uses the
+// route's standing fare automatically; the operator manages those
+// in a separate Routes & Fares screen. This is one of the key
+// conversation points with Gadaa.
 //
 // Submit creates a new departure and routes back to dashboard.
 // In a real build, submit would POST /api/operator/departures.
@@ -34,7 +40,6 @@ export function OperatorAddDeparture() {
   const [date, setDate] = useState(today());
   const [depTime, setDepTime] = useState('06:00');
   const [busNumber, setBusNumber] = useState('GAD-');
-  const [pricePerSeat, setPricePerSeat] = useState('900');
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('+251 9');
 
@@ -58,7 +63,7 @@ export function OperatorAddDeparture() {
     return `${String(ah).padStart(2, '0')}:${String(am).padStart(2, '0')}`;
   })();
 
-  const canSubmit = from !== to && busNumber.length >= 5 && driverName.length > 1 && driverPhone.length >= 8 && Number(pricePerSeat) > 0;
+  const canSubmit = from !== to && busNumber.length >= 5 && driverName.length > 1 && driverPhone.length >= 8;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +79,10 @@ export function OperatorAddDeparture() {
       depHHMM: h + m / 60,
       durationHr,
       totalSeats: 49,
-      pricePerSeat: Number(pricePerSeat),
+      // Pull the standing fare for this route. In a real build this
+      // would come from the operator's Routes & Fares table; the
+      // dispatcher creating a departure shouldn't have to retype it.
+      pricePerSeat: computeBusFare(km, 'premium'),
       driverName,
       driverPhone,
     });
@@ -159,14 +167,20 @@ export function OperatorAddDeparture() {
           </div>
         </Section>
 
-        {/* Pricing */}
+        {/* Pricing — intentionally not edited here. See the comment
+            block at the top of the file for the design rationale. */}
         <Section title="Pricing" sub="Gatii">
-          <NumberField icon={<DollarSign size={14} />} label="Price per seat (ETB)" value={pricePerSeat} onChange={setPricePerSeat} placeholder="900" />
-          {Number(pricePerSeat) > 0 && (
-            <div className="mt-2 text-[11px] text-ink-500">
-              Full bus: <span className="font-bold tabular">{fmtBr(Number(pricePerSeat) * 49)}</span> at 49 seats
+          <div className="rounded-lg p-3 flex items-start gap-2.5 bg-amber-50 border border-amber-200">
+            <Info size={14} className="text-amber-700 flex-shrink-0 mt-0.5" />
+            <div className="text-[11px] text-amber-900 leading-relaxed">
+              Fares are set on the <span className="font-bold">Routes & Fares</span> screen, not per departure.
+              {fromCity && toCity && from !== to && (
+                <span className="block mt-1 text-amber-800">
+                  This route currently uses Gadaa's standing fare for {fromCity.name} → {toCity.name}.
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </Section>
 
         {/* Submit */}
@@ -231,20 +245,6 @@ function TextField({ icon, label, value, onChange, placeholder }: { icon: React.
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full text-sm rounded-xl pl-9 pr-3 py-2.5 bg-tiket-warm-cream border border-ink-100 outline-none text-ink-900"
-      />
-    </FieldShell>
-  );
-}
-
-function NumberField({ icon, label, value, onChange, placeholder }: { icon: React.ReactNode; label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
-  return (
-    <FieldShell icon={icon} label={label}>
-      <input
-        type="number"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full text-sm rounded-xl pl-9 pr-3 py-2.5 bg-tiket-warm-cream border border-ink-100 outline-none text-ink-900 tabular"
       />
     </FieldShell>
   );

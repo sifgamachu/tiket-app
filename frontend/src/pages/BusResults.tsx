@@ -103,7 +103,7 @@ function BusCard({ bus, pax }: { bus: Bus; pax: number }) {
         </div>
         <div className="text-right">
           <div className="text-sm font-black text-ink-900 tabular">{fmtBr(bus.basePrice)}</div>
-          <div className="text-[9px] text-ink-500">per seat</div>
+          <div className="text-[9px] text-ink-500">per seat · indicative</div>
         </div>
       </div>
 
