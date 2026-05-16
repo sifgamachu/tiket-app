@@ -6,7 +6,8 @@
 
 import type { Bus, Train, EventItem, Ticket, BaseTicket, BusTicket, RailTicket, EventTicket, RailClass, PaymentMethod } from '@/types';
 import { CITIES } from '@/data/cities';
-import { BUS_OPERATORS } from '@/data/operators';
+import { BUS_OPERATORS, getBusOperator } from '@/data/operators';
+import { getRouteDistance, getOperatorsForRoute, computeBusFare, getDeparturesForRoute } from '@/data/routes';
 import { RAIL_STATIONS, RAIL_CLASSES, railSeatLabel } from '@/data/rail';
 import { EVENTS } from '@/data/events';
 import { busTicketId, railTicketId, eventTicketId, buildQrPayload } from './ticket-id';
@@ -45,20 +46,25 @@ export async function searchBuses(params: {
 }
 
 function generateMockBuses({ from, to, date }: { from: string; to: string; date: string }): Bus[] {
-  const distances: Record<string, number> = {
-    'AA-BD': 565, 'AA-HW': 275, 'AA-MK': 783, 'AA-GD': 727,
-    'AA-DD': 515, 'AA-JM': 350, 'AA-AD': 100, 'AA-AM': 510,
-    'AA-DS': 401, 'AA-HR': 526, 'AA-DB': 130,
-  };
-  const key1 = `${from}-${to}`, key2 = `${to}-${from}`;
-  const km = distances[key1] ?? distances[key2] ?? 350;
+  const km = getRouteDistance(from, to);
+  if (km === 0) return [];
   const durHr = km / 60;
 
-  // 6 morning departures: 04:30, 05:00, 05:30, 06:00, 06:30, 07:00
-  const departures = [4.5, 5.0, 5.5, 6.0, 6.5, 7.0];
-  return departures.map((dep, i) => {
-    const op = BUS_OPERATORS[i % BUS_OPERATORS.length];
-    const seedKey = `${from}-${to}-${date}-${i}`;
+  // Real-world: which operators actually run this corridor?
+  const operatorIds = getOperatorsForRoute(from, to);
+  // Real-world: how many departures per day for a route of this length?
+  const departures = getDeparturesForRoute(km);
+
+  // Pair operators with departure slots. If we have more departures
+  // than operators, an operator can repeat (real operators run
+  // multiple times per day on busy routes).
+  const buses: Bus[] = [];
+  departures.forEach((dep, i) => {
+    const opId = operatorIds[i % operatorIds.length];
+    const op = getBusOperator(opId);
+    if (!op) return;
+
+    const seedKey = `${from}-${to}-${date}-${i}-${opId}`;
     const r = seedFor(seedKey);
     const sold = Math.floor(49 * (0.3 + r * 0.6));
     const seatStates = Array.from({ length: 49 }, (_, idx) => {
@@ -66,7 +72,7 @@ function generateMockBuses({ from, to, date }: { from: string; to: string; date:
       if (idx < sold + 2 && r > 0.5) return 2;
       return 0;
     });
-    return {
+    buses.push({
       id: `${op.id}-${from}-${to}-${date}-${dep}`.replace(/\./g, ''),
       operatorId: op.id,
       busNumber: `${op.id.toUpperCase().slice(0, 3)}-${100 + i * 7}`,
@@ -75,11 +81,12 @@ function generateMockBuses({ from, to, date }: { from: string; to: string; date:
       durationHr: durHr * (0.9 + r * 0.2),
       totalSeats: 49,
       seatStates,
-      basePrice: Math.round(km * 1.8 + (op.tier === 'premium' ? 200 : 0)),
+      basePrice: computeBusFare(km, op.tier),
       amenities: op.tier === 'premium' ? ['wifi', 'ac', 'snack', 'water', 'usb'] : ['ac', 'water'],
       date,
-    };
+    });
   });
+  return buses;
 }
 
 export async function getBus(id: string): Promise<Bus | null> {

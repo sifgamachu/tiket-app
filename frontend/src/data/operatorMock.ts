@@ -8,6 +8,8 @@
 // whose job is to start a conversation, not to run a business.
 // ─────────────────────────────────────────────────────────────────
 
+import { computeBusFare } from './routes';
+
 export interface OperatorDeparture {
   id: string;
   busNumber: string;
@@ -90,7 +92,7 @@ function generateDepartures(): OperatorDeparture[] {
       durationHr: route.km / 60,
       totalSeats,
       seatsSold,
-      pricePerSeat: Math.round(route.km * 1.8 + 200),
+      pricePerSeat: computeBusFare(route.km, 'premium'),
       status,
       driverName: driver.name,
       driverPhone: driver.phone,
@@ -112,7 +114,7 @@ function generateDepartures(): OperatorDeparture[] {
       durationHr: route.km / 60,
       totalSeats: 49,
       seatsSold: Math.floor(49 * (0.15 + Math.random() * 0.4)),
-      pricePerSeat: Math.round(route.km * 1.8 + 200),
+      pricePerSeat: computeBusFare(route.km, 'premium'),
       status: 'scheduled',
       driverName: driver.name,
       driverPhone: driver.phone,
@@ -134,7 +136,7 @@ function generateDepartures(): OperatorDeparture[] {
       durationHr: route.km / 60,
       totalSeats: 49,
       seatsSold: Math.floor(49 * (0.05 + Math.random() * 0.25)),
-      pricePerSeat: Math.round(route.km * 1.8 + 200),
+      pricePerSeat: computeBusFare(route.km, 'premium'),
       status: 'scheduled',
       driverName: driver.name,
       driverPhone: driver.phone,
